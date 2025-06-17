@@ -6,6 +6,7 @@ clone this repository in any local folder
 - git clone https://github.com/andre-guardia/game-of-life-assessment
 
 # Build and Test
-- Open the backend on Visual Studio and click Start
-- Open the front-end on Visual Code and open a terminal and run this comand
+- Open the backend on Visual Studio and press f5
+- Open the front-end on Visual Code and open a terminal and run these comands
+  - npm install
   - npm start 
