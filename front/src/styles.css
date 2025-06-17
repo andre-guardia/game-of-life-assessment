@@ -23,6 +23,10 @@ table {
   margin-right: auto;
 }
 
+select {
+  margin-right: 5px;
+}
+
 th, td {
     padding-left: 1rem;
     padding-right: 1rem;
@@ -30,4 +34,8 @@ th, td {
 
 button {
   margin-left: 5px;
+}
+
+fieldset div {
+  margin-top: 5px;
 }

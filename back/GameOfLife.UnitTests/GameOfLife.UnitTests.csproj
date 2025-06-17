@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\GameOfLife.Application\GameOfLife.Application.csproj" />
+    <ProjectReference Include="..\GameOfLife.Domain\GameOfLife.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

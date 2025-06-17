@@ -9,7 +9,6 @@ namespace GameOfLife.Application.UseCases.CreateBoard
         {
             WidthMustBeInformed();
             HeightMustBeInformed();
-            CellsMustBeValid();
         }
 
         public void WidthMustBeInformed() =>
@@ -22,11 +21,5 @@ namespace GameOfLife.Application.UseCases.CreateBoard
             RuleFor(d => d.Height)
             .Must(height => height > 0)
             .WithMessage(nameof(CreateBoardInput.Height).IsRequired());
-
-        public void CellsMustBeValid() =>
-            RuleFor(d => d.Cells)
-            .Must(cells => cells?.All(c => c.X > 0 && c.Y > 0) is true)
-            .When(d => d.Cells != null && d.Cells.Count > 0)
-            .WithMessage(nameof(CreateBoardInput.Cells).IsNotValid());
     }
 }

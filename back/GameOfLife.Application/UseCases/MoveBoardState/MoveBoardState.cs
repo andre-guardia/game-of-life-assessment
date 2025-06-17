@@ -3,6 +3,7 @@ using GameOfLife.Application.UseCases.Shared;
 using GameOfLife.Application.UseCases.Shared.Outputs;
 using GameOfLife.Core.UseCases.Outputs;
 using GameOfLife.Domain.Contexts;
+using GameOfLife.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace GameOfLife.Application.UseCases.MoveBoardState
@@ -24,14 +25,27 @@ namespace GameOfLife.Application.UseCases.MoveBoardState
             if (board is null)
                 return HandleError($"Board {request.BoardId} not found");
 
-            if (board.IsCrashed)
-                return HandleError($"Board {request.BoardId} is crashed");
-
-            if (request.FinalState)
+            if (request.Direction == Direction.Forward)
             {
-                while (!board.IsCrashed)
-                    board.MoveNext();
+                if (board.IsCrashed)
+                    return HandleError($"Board {request.BoardId} is crashed");
+
+                if (request.FinalState)
+                {
+                    while (!board.IsCrashed)
+                        board.MoveNext();
+                }
+
+                MoveNext(board, request);
             }
+            else
+                MoveBack(board, request);
+
+            return new Output(new MoveBoardStateOutput(_mapper.Map<BoardOutput>(board)));
+        }
+
+        private void MoveNext(Board board, MoveBoardStateInput request)
+        {
             if (request.Lenght.HasValue)
             {
                 for (var i = 0; i < request.Lenght.Value; i++)
@@ -42,8 +56,11 @@ namespace GameOfLife.Application.UseCases.MoveBoardState
             }
             else
                 board.MoveNext();
+        }
 
-            return new Output(new MoveBoardStateOutput(_mapper.Map<BoardOutput>(board)));
+        private void MoveBack(Board board, MoveBoardStateInput request)
+        {
+            board.MoveBack(request.Lenght);
         }
     }
 }

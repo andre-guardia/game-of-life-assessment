@@ -3,6 +3,7 @@ using GameOfLife.Application.UseCases.GetBoard;
 using GameOfLife.Application.UseCases.MoveBoardState;
 using GameOfLife.Application.UseCases.RestartBoard;
 using GameOfLife.Application.UseCases.Shared.Outputs;
+using GameOfLife.Application.UseCases.UpdateBoard;
 using GameOfLife.Core.Extensions;
 using GameOfLife.Core.UseCases.Outputs;
 using MediatR;
@@ -106,6 +107,22 @@ namespace GameOfLife.API.Controllers
 
                 return Ok(result.Data);
             }
+
+            return BadRequest(output);
+        }
+
+        [HttpPut("update-board/{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(BoardOutput))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(Output))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
+        public async Task<IActionResult> UpdateBoard([FromRoute] Guid id, [FromBody] UpdateBoardInput input, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation($"Starting UpdateBoard: {input.ToJson()}");
+            input.BoardId = id;
+            var output = await _mediator.Send(input, cancellationToken);
+            if (output.IsValid)
+                return NoContent();
 
             return BadRequest(output);
         }

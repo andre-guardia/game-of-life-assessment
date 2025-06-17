@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Board } from '../models/board';
-import axios from 'axios';
+import { Cell } from '../models/cell';
+import { GameService } from '../services/game-service';
+import { Direction } from '../models/direction';
 
 const GameOfLife = () => {
+    const [boards, setBoards] = useState<Board[]>([]);
     const [currentBoard, setCurrentBoard] = useState<Board>();
-    const [boardId, setBoardId] = useState<string>('');
     const [stateCount, setStateCount] = useState<number>(1);
-    const apiAddress = 'https://localhost:7067/api/board';
+    const gameService = new GameService();
     const lines: any = [];
 
     if (currentBoard) {
@@ -20,14 +22,11 @@ const GameOfLife = () => {
 
     const createBoard = async () => {
         try {
-            const response = await axios.post<Board>(apiAddress, {
-                width: 10,
-                height: 10,
-                randomCells: true
-            });
+            const response = await gameService.createBoard();
             if (response.status == 200) {
                 setCurrentBoard(response.data);
-                setBoardId(response.data.id);
+                boards?.push(response.data);
+                setBoards(boards);
             }
         } catch (err) {
             console.log(err);
@@ -35,27 +34,21 @@ const GameOfLife = () => {
         }
     };
 
-    const getBoardById = async () => {
-        if (boardId) {
-            try {
-                const response = await axios.get<Board>(`${apiAddress}/${boardId}`);
-                if (response.status == 200) {
-                    setCurrentBoard(response.data);
-                }
-            } catch (err) {
-                console.log(err);
-                handleError(err);
+    const getBoardById = async (boardId: string) => {
+        try {
+            const response = await gameService.getBoardById(boardId);
+            if (response.status == 200) {
+                setCurrentBoard(response.data);
             }
+        } catch (err) {
+            console.log(err);
+            handleError(err);
         }
     };
 
-    const moveNext = async (finalState: boolean) => {
+    const moveState = async (finalState: boolean, direction: Direction = Direction.Forward) => {
         try {
-            const response = await axios.put<Board>(`${apiAddress}/move-state/${boardId}`, {
-                boardId,
-                lenght: stateCount,
-                finalState: finalState
-            });
+            const response = await gameService.moveState(currentBoard!.id, stateCount, finalState, direction);
             if (response.status == 200) {
                 setCurrentBoard(response.data);
             }
@@ -67,10 +60,19 @@ const GameOfLife = () => {
 
     const restartBoard = async () => {
         try {
-            const response = await axios.put<Board>(`${apiAddress}/restart/${boardId}`);
+            const response = await gameService.restartBoard(currentBoard!.id);
             if (response.status == 200) {
                 setCurrentBoard(response.data);
             }
+        } catch (err) {
+            console.log(err);
+            handleError(err);
+        }
+    };
+
+    const updateBoard = async () => {
+        try {
+            await gameService.updateBoard(currentBoard!);
         } catch (err) {
             console.log(err);
             handleError(err);
@@ -83,6 +85,26 @@ const GameOfLife = () => {
             alert(messages[0]);
         }
     };
+    
+    const handleCellClick = async (activeCell: Cell) => {
+        if (currentBoard) {
+            const newBoard: Board = {...currentBoard,
+                cells: currentBoard!.cells.map(item => {
+                    if (item.x === activeCell.x && item.y === activeCell.y) {
+                        item.alive = !item.alive;
+                    }
+
+                    return item;
+                })
+            };
+            setCurrentBoard(newBoard);
+            await updateBoard();
+        }
+    };
+
+    const onChangeBoard = async (event: any) => {
+        await getBoardById(event.target.value);
+    };
 
     const contents = currentBoard === undefined
         ? <p></p>
@@ -91,11 +113,20 @@ const GameOfLife = () => {
                 <tbody>
                     {lines && lines.map((line: any, idx: number) =>
                         <tr key={idx}>
-                            {line && line.map((cell: any, idxCell: number) => <td style={{ width: '20px', height: '20px' }} key={ idxCell } > { cell.alive ? "✅" : "" }</td>)}
+                            {line && line.map((cell: Cell, idxCell: number) => 
+                            <td key={ idxCell }
+                                style={{ width: '20px', height: '20px' }}
+                                onClick={() => handleCellClick(cell)}>
+                                { cell.alive ? "✅" : "" }
+                            </td>
+                            )}
                         </tr>
                     )}
                 </tbody>
             </table>
+            <p>
+                <span>GameId: {currentBoard.id}</span>
+            </p>
             <p>
                 <span>States: {currentBoard.stateCount}</span>
             </p>
@@ -108,14 +139,29 @@ const GameOfLife = () => {
       <div>
         <h1>Game Of Life</h1>
         {currentBoard && (
-            <>
-                <input type="number" placeholder="State Count" value={stateCount} onChange={e => setStateCount(+e.target.value)}></input>
-                <button onClick={e => moveNext(false)}>Next</button>
-                <button onClick={e => moveNext(true)}>Final State</button>
-                <button onClick={restartBoard}>Restart</button>
-            </>
+            <fieldset>
+                <div>
+                    <label>GameId: </label>
+                    <select onChange={onChangeBoard} value={currentBoard.id}>
+                        {boards && (
+                            boards.map(b => (
+                                <option key={b.id} value={b.id}>{b.id}</option>
+                            ))
+                        )}
+                    </select>
+                </div>
+                <div>
+                    <label>States: </label>
+                    <input type="number" placeholder="State Count" value={stateCount} onChange={e => setStateCount(+e.target.value)}></input>
+                    <button onClick={e => moveState(false)}>Next</button>
+                    <button onClick={e => moveState(false, Direction.Back)}>Back</button>
+                </div>
+                <div>
+                    <button onClick={e => moveState(true)}>Final State</button>
+                    <button onClick={restartBoard}>Restart</button>
+                </div>
+            </fieldset>
         )}
-        
         <button onClick={createBoard}>New Game</button>
         {contents}
       </div>

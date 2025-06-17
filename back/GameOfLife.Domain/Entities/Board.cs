@@ -49,13 +49,16 @@
                 }
             }
 
-            foreach (var cell in aliveCells)
+            if (aliveCells != null)
             {
-                var found = cells.FirstOrDefault(c => c.X == cell.X && c.Y == cell.Y);
-                if (found != null)
-                    found.Alive = true;
-                else
-                    throw new Exception("Cell not found (check board dimensions)");
+                foreach (var cell in aliveCells)
+                {
+                    var found = cells.FirstOrDefault(c => c.X == cell.X && c.Y == cell.Y);
+                    if (found != null)
+                        found.Alive = true;
+                    else
+                        throw new Exception("Cell not found (check board dimensions)");
+                }
             }
 
             return new Board(Guid.NewGuid(), width, height, cells);
@@ -88,6 +91,20 @@
             Cells = nextCells;
         }
 
+        public void MoveBack(int? stateCount)
+        {
+            if (PreviousStates.Count == 0)
+                return;
+
+            var backStates = stateCount.HasValue ? stateCount.Value : 1;
+            var lastState = PreviousStates[PreviousStates.Count - backStates];
+            if (lastState is not null)
+                Cells = lastState.Cells.ToList();
+
+            for (int i = 0; i < backStates; i++)
+                PreviousStates.RemoveAt(PreviousStates.Count - 1);
+        }
+
         public void RestartBoard()
         {
             var original = PreviousStates.FirstOrDefault();
@@ -95,6 +112,16 @@
             {
                 Cells = original.Cells.ToList();
                 PreviousStates.Clear();
+            }
+        }
+
+        public void SetCells(IEnumerable<Cell> cells)
+        {
+            foreach (var cell in cells)
+            {
+                var found = Cells.FirstOrDefault(c => c.X == cell.X && c.Y == cell.Y);
+                if (found != null)
+                    found.Alive = cell.Alive;
             }
         }
 

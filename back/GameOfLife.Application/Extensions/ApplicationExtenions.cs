@@ -2,6 +2,7 @@
 using GameOfLife.Application.UseCases.GetBoard;
 using GameOfLife.Application.UseCases.MoveBoardState;
 using GameOfLife.Application.UseCases.RestartBoard;
+using GameOfLife.Application.UseCases.UpdateBoard;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameOfLife.Application.Extensions
@@ -14,6 +15,7 @@ namespace GameOfLife.Application.Extensions
             services.AddScoped<ICreateBoardUseCase, CreateBoard>();
             services.AddScoped<IMoveBoardStateUseCase, MoveBoardState>();
             services.AddScoped<IRestartBoardUseCase, RestartBoard>();
+            services.AddScoped<IUpdateBoardUseCase, UpdateBoard>();
 
             return services;
         }
